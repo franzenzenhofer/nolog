@@ -1,0 +1,31 @@
+<html>
+  <head>
+    <title>Simple Nolog Client Example</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+        <!--<script src="./externallibs/jrumble.1.1.min.js"></script>-->
+        <script src="./externallibs/webkitTransform.js"></script>
+        <script src="http://cdn.socket.io/stable/socket.io.js"></script> 
+        <script>
+        "use strict";
+var d = 0;
+$(document).ready(function() {
+  var c = new io.Socket("127.0.0.1", {port:3001, transports:["websocket"]});
+  c.on("connect", function() {
+    c.send("start")
+  });
+  c.on("message", function(b) {
+    if(b == "Googlebot") {
+      //console.log("googlebot was here");
+      d = d + 1;
+      $("#mattcutts").webkitTransform("rotate(" + d % 360 + "deg)")
+    }
+  });
+  c.on("disconnect", function() {
+  });
+  c.connect()
+});</script>
+  </head>
+  <body>
+    <center><img src='./img/mattcutts.png' id='mattcutts' style='margin-top:100px;'></center>
+  </body>
+</html>

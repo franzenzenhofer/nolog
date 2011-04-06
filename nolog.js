@@ -1,17 +1,55 @@
 #!/usr/bin/env node
 
 var util = require("util");
+var events = require('events');
 var spawn = require("child_process").spawn;
 var tailHolder = {};
 var stumpA = [];
+
 var isRegExp = function(obj) {
   return!!(obj && obj.test && obj.exec && (obj.ignoreCase || obj.ignoreCase === false))
 };
-var tailf = function(file) {
+var tail = function(file, follow, wholefile) {
+  var aA = [];
+  if(follow){aA.push('-f');}
+  if(wholefile) { aA.push('-c'); aA.push('+1'); }
+  aA.push(file);
   //console.log("tail created with: " + file);
-  return spawn("tail", ["-f", file])
+  //return spawn("tail", ['-c','+1',"-f", file]);
+  return spawn("tail", aA)
+
 };
-var job = function(file, pattern, callback, errcallback, exitcallback) {
+
+var NologEventEmitter = function()
+{
+  events.EventEmitter.call(this);
+}
+
+NologEventEmitter.super_ = events.EventEmitterK
+NologEventEmitter.prototype = Object.create(events.EventEmitter.prototype, {constructor: {value:NologEventEmitter, enumberable:false}});
+
+NologEventEmitter.prototype.file = undefined;
+NologEventEmitter.prototype.follow = true;
+NologEventEmitter.prototype.wholefile = true;
+NologEventEmitter.prototype.errcallback = undefined;
+NologEventEmitter.prototype.exitcallback = undefined;
+NologEventEmitter.prototype.shout = function(eventname, pattern)
+{
+  var self = this;
+  var file = self.file;
+  return job(file, pattern, function(data){ self.emit(eventname, data);}, self.errcallback, self.exitcallback, self.follow, self.wholefile );
+}
+
+var createEmiter = function (file)
+{
+  var nee = new NologEventEmitter();
+  nee.file=file;
+  return nee;
+}
+
+var watch = createEmiter;
+
+var job = function(file, pattern, callback, errcallback, exitcallback, follow, startat) {
   //console.log("ajob");
   var that = this;
   var callback = callback || function(data) {
@@ -31,23 +69,26 @@ var job = function(file, pattern, callback, errcallback, exitcallback) {
     pattern = new RegExp(pattern.replace("\\", "\\\\"))
   }
   var file = file || undefined;
-  var mytailf;
+  var follow = follow || true;
+  var wholefile = wholefile || true;
+  
+  var mytail;
   if(file == undefined) {
     throw new Error("critical error in nolog - file must not be undefined");
   }
   if(tailHolder[file]) {
-    mytailf = tailHolder[file].process;
+    mytail = tailHolder[file].process;
   }else {
-    mytailf = tailf(file);
+    mytail = tail(file, follow, wholefile);
     tailHolder[file]={};
-    tailHolder[file].process = mytailf;
+    tailHolder[file].process = mytail;
     tailHolder[file].listenerA = [];
   }
-  mytailf.stdin.setEncoding("utf8");
-  mytailf.stdout.setEncoding("utf8");
-  mytailf.stderr.setEncoding("utf8");
+  mytail.stdin.setEncoding("utf8");
+  mytail.stdout.setEncoding("utf8");
+  mytail.stderr.setEncoding("utf8");
   var listener = function(data) {
-    //console.log("mytailf.stdout.on data");
+    //console.log("mytail.stdout.on data");
     var dataA = data.split("\n");
     for(var i = 0;i < dataA.length;i++) {
       //is last line complete (end with \n)
@@ -70,15 +111,15 @@ var job = function(file, pattern, callback, errcallback, exitcallback) {
     }
   };
   
-  mytailf.stdout.on("data", listener);
+  mytail.stdout.on("data", listener);
   tailHolder[file].listenerA.push(listener);
-  mytailf.stderr.on("data", function(data) {
+  mytail.stderr.on("data", function(data) {
     errcallback(data)
   });
-  mytailf.on("exit", exitcallback);
+  mytail.on("exit", exitcallback);
   var kill = function()
   {
-    mytailf.stdout.removeListener('data', listener);
+    mytail.stdout.removeListener('data', listener);
     var li = tailHolder[file].listenerA.indexOf(listener)
     tailHolder[file].listenerA[li]=undefined;
     var tempA = [];
@@ -92,18 +133,20 @@ var job = function(file, pattern, callback, errcallback, exitcallback) {
   
   var killAll = function()
   {
-    //kills the mytailf
+    //kills the mytail
     console.log('killAll');
-    mytailf.kill("SIGHUP");
+    mytail.kill("SIGHUP");
   }
-  var pid = {"tail":mytailf.pid};
+  var pid = {"tail":mytail.pid};
   return{"pid":pid, 'pattern':pattern, 'file':file, 'kill':kill}
 };
 if(!exports) {
   var exports = this;
 }
+
 exports.job = job;
 exports.tailList = tailHolder;
+exports.watch = watch;
 process.on("exit", function() {
   for(var t in tailHolder) {
     tailHolder[t].process.kill("SIGHUP")

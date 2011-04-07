@@ -2,14 +2,14 @@
 var nolog = require("./nolog.js");
 var logfile = "./test.log";
 
+
+nolog.debugSwitch(true);
 var mylog = nolog.watch(logfile);
-mylog.shout('googlebot', 'Googlebot');
-mylog.on('googlebot', function(data){ console.log("a Googlebot"); });
+mylog.shoutIf('googlebot', /Googlebot/i);
+mylog.on('googlebot', function(data){ console.log("a Googlebot"); console.log(data);});
 
-mylog.shout('chrome', 'Chrome');
-mylog.on('chrome', function(data){ console.log("a Chrome"); });
+mylog.shoutIfNot('chrome', 'Chrome');
+mylog.on('chrome', function(data){ console.log("not a Chrome"); console.log(data); });
 
-
-process.on("exit", function() {
-  console.log("NologServer Main loop exit")
-});
+setTimeout(function(){console.log("send kill for mylog 'googlebot'");mylog.kill('googlebot');}, 6000);
+setTimeout(function(){console.log("send kill for mylog 'chrome'");mylog.kill('chrome');}, 8000);

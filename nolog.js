@@ -1,97 +1,142 @@
-#!/usr/bin/env node
-
 var util = require("util");
-var events = require('events');
+var events = require("events");
 var spawn = require("child_process").spawn;
 var tailHolder = {};
 var stumpA = [];
-
+var debugIt=false;
+var debugconsole = function(s) { if(debugIt===true){ console.log(s); } };
+var d = debugconsole;
 var isRegExp = function(obj) {
   return!!(obj && obj.test && obj.exec && (obj.ignoreCase || obj.ignoreCase === false))
 };
+RegExp.escape = function(str)
+{
+  var specials = new RegExp("[.*+?|()\\[\\]{}\\\\]", "g"); // .*+?|()[]{}\
+  return str.replace(specials, "\\$&");
+}
+var debugSwitch = function(val){ debugIt = val; };
 var tail = function(file, follow, wholefile) {
   var aA = [];
-  if(follow){aA.push('-f');}
-  if(wholefile) { aA.push('-c'); aA.push('+1'); }
+  if(follow) {
+    aA.push("-f")
+  }
+  if(wholefile) {
+    aA.push("-c");
+    aA.push("+1")
+  }
   aA.push(file);
-  //console.log("tail created with: " + file);
-  //return spawn("tail", ['-c','+1',"-f", file]);
   return spawn("tail", aA)
-
 };
-
-var NologEventEmitter = function()
-{
-  events.EventEmitter.call(this);
-}
-
-NologEventEmitter.super_ = events.EventEmitterK
-NologEventEmitter.prototype = Object.create(events.EventEmitter.prototype, {constructor: {value:NologEventEmitter, enumberable:false}});
-
-NologEventEmitter.prototype.file = undefined;
+var NologEventEmitter = function() {
+  events.EventEmitter.call(this)
+};
+NologEventEmitter.super_ = events.EventEmitter;
+NologEventEmitter.prototype = Object.create(events.EventEmitter.prototype, {constructor:{value:NologEventEmitter, enumberable:false}});
+NologEventEmitter.prototype.file = null;
 NologEventEmitter.prototype.follow = true;
 NologEventEmitter.prototype.wholefile = true;
-NologEventEmitter.prototype.errcallback = undefined;
-NologEventEmitter.prototype.exitcallback = undefined;
-NologEventEmitter.prototype.shout = function(eventname, pattern)
-{
+NologEventEmitter.prototype.errcallback = null;
+NologEventEmitter.prototype.exitcallback = null;
+NologEventEmitter.prototype.jobs = [];
+NologEventEmitter.prototype.shoutIf = function(eventname, pattern) {
   var self = this;
   var file = self.file;
-  return job(file, pattern, function(data){ self.emit(eventname, data);}, self.errcallback, self.exitcallback, self.follow, self.wholefile );
-}
+  self.jobs.push(job.call(self, file, pattern, eventname, function(data) {
+    self.emit(eventname, data)
+  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, false));
+  return self;
+};
+NologEventEmitter.prototype.shout = NologEventEmitter.prototype.shoutIf;
+NologEventEmitter.prototype.shoutIfNot = function(eventname, pattern) {
+  var self = this;
+  var file = self.file;
+  self.jobs.push(job.call(self, file, pattern, eventname, function(data) {
+    self.emit(eventname, data)
+  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, true));
+  return self;
+};
 
-var createEmiter = function (file)
+NologEventEmitter.prototype.kill = function (eventname)
 {
-  var nee = new NologEventEmitter();
-  nee.file=file;
-  return nee;
+  console.log('debugIt'+debugIt);
+  d('kill '+eventname)
+  var self = this;
+  self.jobs.forEach(function(e){
+    if(e.eventname == eventname)
+    {
+      return e.kill();
+    }
+  });
+  return self;
 }
 
-var watch = createEmiter;
+NologEventEmitter.prototype.killAll = function(jobsAllreadyGone)
+{
+  var self = this;
+  var jobsAllreadyGone = jobsAllreadyGone || false;
+  if(jobsAllreadyGone===false)
+  {
+    self.jobs.forEach(function(e){
+      e.kill();
+    });
+  }
+  tailHolder[self.file].process.kill("SIGHUP");
+  delete tailHolder[self.file];
+  return self;
+}
 
-var job = function(file, pattern, callback, errcallback, exitcallback, follow, startat) {
-  //console.log("ajob");
-  var that = this;
+NologEventEmitter.prototype.unwatch = NologEventEmitter.prototype.killAll;
+
+var createEmiter = function(file, o) {
+  var nee = new NologEventEmitter;
+  nee.file = file;
+  for(var n in o)
+  {
+    //console.log(n);
+    nee[n]=o[n];
+  }
+  return nee
+};
+var watch = createEmiter;
+var job = function(file, pattern, eventname, callback, errcallback, exitcallback, follow, startat, ifnot) {
+  var self = this;
   var callback = callback || function(data) {
-    //console.log(data);
     return data
   };
   var errcallback = errcallback || function(data) {
-    console.log("stderr: " + data);
-    throw new Error("data");return data
+    d("stderr: " + data);
+    throw new Error(data);return data
   };
-  
   var exitcallback = function(code) {
-    console.log("tail process exited with code " + code)
-  }
+    d("tail process exited with code " + code)
+  };
   var pattern = pattern || undefined;
   if(pattern && !isRegExp(pattern)) {
-    pattern = new RegExp(pattern.replace("\\", "\\\\"))
+    pattern = new RegExp(RegExp.escape(pattern))
   }
+  var eventname = eventname || 'nologId'+(function() {var id=0;return function() {if (arguments[0]==0) {id=1;return 0;} else return id++;}})();
   var file = file || undefined;
   var follow = follow || true;
-  var wholefile = wholefile || true;
-  
+  var wholefile = wholefile || false;
+  var ifnot = ifnot || false;
   var mytail;
-  if(file == undefined) {
+  if(!file) {
     throw new Error("critical error in nolog - file must not be undefined");
   }
   if(tailHolder[file]) {
-    mytail = tailHolder[file].process;
+    mytail = tailHolder[file].process
   }else {
     mytail = tail(file, follow, wholefile);
-    tailHolder[file]={};
+    tailHolder[file] = {};
     tailHolder[file].process = mytail;
-    tailHolder[file].listenerA = [];
+    tailHolder[file].listenerA = []
   }
   mytail.stdin.setEncoding("utf8");
   mytail.stdout.setEncoding("utf8");
   mytail.stderr.setEncoding("utf8");
   var listener = function(data) {
-    //console.log("mytail.stdout.on data");
     var dataA = data.split("\n");
     for(var i = 0;i < dataA.length;i++) {
-      //is last line complete (end with \n)
       if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10) {
         stumpA[0] = dataA[i]
       }else {
@@ -104,52 +149,68 @@ var job = function(file, pattern, callback, errcallback, exitcallback, follow, s
           line = dataA[i]
         }
         var match = line.match(pattern);
-        if(match) {
+        if(!!match && !ifnot) {
           callback(match)
+        }
+        else if(!match && ifnot) {
+          var rA=[];
+          rA[0]=null;
+          rA.index=null;
+          rA.input=line;
+          callback(rA);
         }
       }
     }
   };
-  
   mytail.stdout.on("data", listener);
   tailHolder[file].listenerA.push(listener);
   mytail.stderr.on("data", function(data) {
     errcallback(data)
   });
   mytail.on("exit", exitcallback);
-  var kill = function()
-  {
-    mytail.stdout.removeListener('data', listener);
-    var li = tailHolder[file].listenerA.indexOf(listener)
-    tailHolder[file].listenerA[li]=undefined;
-    var tempA = [];
-    tailHolder[file].listenerA.forEach(function(element){ if(element){tempA.push(element);} });
-    tailHolder[file].listenerA=tempA;
-    if(!tailHolder[file].listenerA.length)
+  var kill = function() {
+    mytail.stdout.removeListener("data", listener);
+    if(tailHolder[file]&&tailHolder[file].listenerA)
     {
-      killAll();
+      var li = tailHolder[file].listenerA.indexOf(listener);
+      if(li !== -1)
+      {
+        //console.log('making the array shorter '+li);
+        //tailHolder[file].listenerA[li] = undefined;
+        //console.log(tailHolder[file].listenerA);
+        tailHolder[file].listenerA.splice(li,1);
+        console.log(tailHolder[file].listenerA);
+      }
+      if(!tailHolder[file].listenerA.length) {
+        d("no more jobs running on "+file+" going to unwatch it");
+      self.killAll(true)
+      }
     }
-  }
-  
-  var killAll = function()
-  {
-    //kills the mytail
-    console.log('killAll');
-    mytail.kill("SIGHUP");
-  }
+    else
+    {
+      throw new Error("Can't kill what is allready dead!");
+    }
+    
+    
+  };
+  var killAll = function() {
+    debugconsole("killAll");
+    mytail.kill("SIGHUP")
+  };
   var pid = {"tail":mytail.pid};
-  return{"pid":pid, 'pattern':pattern, 'file':file, 'kill':kill}
+  var jobO = {"file_pid":pid, "eventname":eventname, "pattern":pattern,  "file":file, "kill":kill, "killAll":killAll};
+  return jobO;
 };
 if(!exports) {
-  var exports = this;
+  var exports = this
 }
-
-exports.job = job;
+//exports.job = job;
+exports.debugSwitch = debugSwitch;
 exports.tailList = tailHolder;
 exports.watch = watch;
 process.on("exit", function() {
   for(var t in tailHolder) {
     tailHolder[t].process.kill("SIGHUP")
   }
-  console.log("Nolog.js Main loop exit")
+  d("Nolog.js Main loop exit")
 });

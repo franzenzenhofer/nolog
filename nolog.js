@@ -194,8 +194,7 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
     
   };
   var killAll = function() {
-    debugconsole("killAll");
-    mytail.kill("SIGHUP")
+    self.killAll();
   };
   var pid = {"tail":mytail.pid};
   var jobO = {"file_pid":pid, "eventname":eventname, "pattern":pattern,  "file":file, "kill":kill, "killAll":killAll};

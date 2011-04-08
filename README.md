@@ -1,7 +1,7 @@
 # nolog.js ... a node.js based real time event driven log file watcher 
 
   - Author: Franz Enzenhofer http://twitter.com/enzenhofer
-  - Thx: Tupalo.com for the awesome Hack Week http://tupalo.com 
+  - Thx: Tupalo.com for the awesome Hack Week <http://tupalo.com> 
 
 nolog lets you watch (log)files in real time and matches regular expressions to events.
 

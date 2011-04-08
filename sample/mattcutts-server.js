@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 var http = require("http"), io = require("socket.io");
-var nolog = require("./nolog.js");
-var logfile = "./test.log";
+var nolog = require("../nolog.js");
+var logfile = "../test.log";
 var clientA = [];
 
 var server = http.createServer(function(req, res) {

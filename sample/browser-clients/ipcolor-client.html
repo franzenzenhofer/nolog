@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <title>ipcolor nolog example</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
+        <script src="http://cdn.socket.io/stable/socket.io.js"></script> 
+        <script>
+        "use strict";
+var d = 0;
+$(document).ready(function() {
+
+$("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $(window).height() + '" style="border:0px solid red;"></canvas>');
+  var c = document.getElementById("c");
+  var ctx = c.getContext("2d");
+  var cH = c.height;
+  var cW = c.width;
+  var dataPointWidth = Math.floor(cW/127);
+  var dataPointHeight = 1;
+  var rowA = [];
+  var drawDataPoint = function (row,color)
+  {
+    if(rowA[row]!==undefined)
+    {
+      rowA[row]++;
+    }
+    else
+    {
+      rowA[row]=0;
+    }
+    var x = dataPointWidth*row;
+    var y = dataPointHeight*rowA[row];
+    //ctx.fillStyle('#'+color);
+    //ctx.fillStyle = "rgb("+255+","+0+","+0+")";
+    ctx.fillStyle = '#'+color;
+    //console.log('color '+color);
+    //console.log(x+' '+y+' '+dataPointWidth+' '+dataPointHeight)
+    if(x+1&&y+1)
+    {
+      ctx.fillRect(x, y, dataPointWidth, dataPointHeight);
+    }
+    
+   
+  }
+
+  
+  var c = new io.Socket("127.0.0.1", {port:3003, transports:["websocket"]});
+  c.on("connect", function() {
+    c.send("start");
+    console.log("connected");
+  });
+  c.on("message", function(b) {
+    if(b) {
+        //console.log(b.color);
+        drawDataPoint(b.row, b.color);
+    }
+    
+  });
+  c.on("disconnect", function() {
+  });
+  c.connect()
+});</script>
+  </head>
+  <body style='margin:0px;padding:0px;overflow:hidden;'>
+  </body>
+</html>

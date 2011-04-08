@@ -14,7 +14,7 @@ RegExp.escape = function(str)
   var specials = new RegExp("[.*+?|()\\[\\]{}\\\\]", "g"); // .*+?|()[]{}\
   return str.replace(specials, "\\$&");
 }
-var debugSwitch = function(val){ debugIt = val; };
+var enableDebug = function(val){ debugIt = val; return this; };
 var tail = function(file, follow, wholefile) {
   var aA = [];
   if(follow) {
@@ -34,25 +34,27 @@ NologEventEmitter.super_ = events.EventEmitter;
 NologEventEmitter.prototype = Object.create(events.EventEmitter.prototype, {constructor:{value:NologEventEmitter, enumberable:false}});
 NologEventEmitter.prototype.file = null;
 NologEventEmitter.prototype.follow = true;
-NologEventEmitter.prototype.wholefile = true;
+NologEventEmitter.prototype.wholefile = false;
 NologEventEmitter.prototype.errcallback = null;
 NologEventEmitter.prototype.exitcallback = null;
 NologEventEmitter.prototype.jobs = [];
-NologEventEmitter.prototype.shoutIf = function(eventname, pattern) {
+NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enableNotEvent) {
   var self = this;
+  d(self);
   var file = self.file;
-  self.jobs.push(job.call(self, file, pattern, eventname, function(data) {
+  var notevent = notevent || false;
+  self.jobs.push(job.call(self, file, pattern, eventname, function(eventname, data) {
     self.emit(eventname, data)
-  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, false));
+  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, false, enableNotEvent));
   return self;
 };
 NologEventEmitter.prototype.shout = NologEventEmitter.prototype.shoutIf;
-NologEventEmitter.prototype.shoutIfNot = function(eventname, pattern) {
+NologEventEmitter.prototype.shoutIfNot = function(eventname, pattern, enableNotEvent) {
   var self = this;
   var file = self.file;
-  self.jobs.push(job.call(self, file, pattern, eventname, function(data) {
+  self.jobs.push(job.call(self, file, pattern, eventname, function(eventname, data) {
     self.emit(eventname, data)
-  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, true));
+  }, self.errcallback, self.exitcallback, self.follow, self.wholefile, true, enableNotEvent));
   return self;
 };
 
@@ -98,7 +100,7 @@ var createEmiter = function(file, o) {
   return nee
 };
 var watch = createEmiter;
-var job = function(file, pattern, eventname, callback, errcallback, exitcallback, follow, startat, ifnot) {
+var job = function(file, pattern, eventname, callback, errcallback, exitcallback, follow, wholefile, ifnot, notevent) {
   var self = this;
   var callback = callback || function(data) {
     return data
@@ -116,9 +118,10 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
   }
   var eventname = eventname || 'nologId'+(function() {var id=0;return function() {if (arguments[0]==0) {id=1;return 0;} else return id++;}})();
   var file = file || undefined;
-  var follow = follow || true;
-  var wholefile = wholefile || false;
-  var ifnot = ifnot || false;
+  var follow = !!follow;
+  var wholefile = !!wholefile;
+  var ifnot = !!ifnot;
+  var notevent = !!notevent;
   var mytail;
   if(!file) {
     throw new Error("critical error in nolog - file must not be undefined");
@@ -137,6 +140,7 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
   var listener = function(data) {
     var dataA = data.split("\n");
     for(var i = 0;i < dataA.length;i++) {
+      //console.log(i);
       if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10) {
         stumpA[0] = dataA[i]
       }else {
@@ -149,15 +153,19 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
           line = dataA[i]
         }
         var match = line.match(pattern);
-        if(!!match && !ifnot) {
-          callback(match)
+        if((!!match && !ifnot)||(!!match && ifnot && notevent)) {
+          
+          if(!!match && ifnot && notevent) { callback('!'+eventname, match); } 
+          else { callback(eventname, match); }
         }
-        else if(!match && ifnot) {
+        else if((!match && ifnot)||(!match&&notevent&&!ifnot)) {
           var rA=[];
           rA[0]=null;
           rA.index=null;
           rA.input=line;
-          callback(rA);
+          var neweventname = eventname;
+          if(!match&&notevent&&!ifnot) { callback('!'+eventname, rA); }else{  callback(neweventname, rA);}
+          
         }
       }
     }
@@ -204,7 +212,7 @@ if(!exports) {
   var exports = this
 }
 //exports.job = job;
-exports.debugSwitch = debugSwitch;
+exports.enableDebug = enableDebug;
 exports.tailList = tailHolder;
 exports.watch = watch;
 process.on("exit", function() {

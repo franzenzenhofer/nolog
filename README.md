@@ -1,5 +1,8 @@
 # nolog.js ... a node.js based real time event driven log file watcher 
 
+  - Author: Franz Enzenhofer http://twitter.com/enzenhofer
+  - Thx: Tupalo.com for the awesome Hack Week http://tupalo.com 
+
 nolog lets you watch (log)files in real time and matches regular expressions to events.
 
 usage
@@ -8,6 +11,7 @@ usage
       
 watch a file
 
+      //nolog.watch(path)
       //returns a NologEventEmitter
       var mylog = nolog.watch("/path/to/the/logfile.log");
 
@@ -24,14 +28,16 @@ shout (throw an event) if a single logfile line matches an reguar expression
 
 the `pattern` argument can either be a regular expression or a simple string ( means .*+?|()[]{}\ will be treated as 'normal' characters)
 
+`shout` is an alias for `shoutIf`
+
 `shoutIfNot` is the same (but opposite) of `shoutIf` - `shoutIfNot` throws an event if the pattern did not lead to a successfull match.
 
       //NologEventEmitter.shoutIfNot(eventname, pattern)
       mylog.shoutIfNot('allNotGetRequests', "GET" );
       
-`shoutIf` and `shotIfNot` start (background) shout-jobs. 
+`shoutIf` and `shotIfNot` start so called shout-jobs. 
       
-`on` assigns an event handler
+assign an event handler
       
       //NologEventEmitter.on(eventname, callback)
       mylog.on('googlebot', function(data){ console.log("a Googlebot");});
@@ -62,12 +68,37 @@ no more `googlebot` events will be thrown. the shout-job with the name `eventnam
 
 if you `kill` the last last shout-job of a watched file, the file is automatically `unwatch`ed. said that, the `NologEventEmitter` object is still valid, if you add a new shout-job, the file is automatically re-`watch`ed. (think: magic)
 
-usefull stuff
+**usefull stuff**
 
+ - `nolog.enableDebug(true)` - turns on some debug output via `console.log`
+ 
  - `NologEventEmitter.file` holds the watched `file` string, default `null`
  - `NologEventEmitter.follow` enables real time updates, default `true`
- - `NologEventEmitter.wholeFile` parses the whole file from the beginning, default `true` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
- - `NologEventEmitter.jobs` array that holds all current shout-jobs assigned ot the currently watched file 
+ - `NologEventEmitter.wholeFile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
+ - `NologEventEmitter.jobs` array that holds a summary of active shout-jobs assigned ot the currently watched file
+ 
+ the `follow` and `wholefile` attribut can be also passed via the `watch` method.
+      
+      var mylog = nolog.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
+
+ 
+**advanced stuff**
+
+notEvents
+
+      //NologEventEmitter.shoutIf(eventname,pattern,enableNotEvent)
+      mylog.shoutIf('bot', /bot/i, true );
+
+additonally to the success event 'bot' another event is thrown, namely '!bot' if the pattern was not matched. this means, for evey parsed logline an event -either `eventname` or `!eventname` - is thrown.
+
+this is not the same as `shoutIfNot` - `shoutIfNot` throws a success match, if something was not matched. as a matter of fact, `shoutIfNot` also supports `enableNotEvent`
+      
+      //NologEventEmitter.shoutIfNot(eventname,pattern,enableNotEvent)
+      mylog.shoutIfNot('human', /bot/i, true );
+
+if the logline does not match the '/bot/i' the event 'human' is thrown. if the logline matches the event '!human' is thrown. (note: notEvents are less confusing when used with `shoutIf`)
+
+
 
 
 

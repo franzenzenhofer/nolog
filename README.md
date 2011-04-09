@@ -7,40 +7,44 @@ nolog lets you watch (log)files in real time and matches regular expressions to 
 
 usage
 
-      var nolog = require("/path/to/nolog/nolog.js");
+      var $n = require("/path/to/nolog/nolog.js");
       
 watch a file
 
-      //nolog.watch(path)
+      //$n(path)
       //returns a NologEventEmitter
-      var mylog = nolog.watch("/path/to/the/logfile.log");
+      var log = $n("/path/to/the/logfile.log");
+      
+alternativly to `$n(path)` one can also write `$n.watch(path)`
 
 note: to test the included examples localy you might want to funnel your webservers logfiles to a local test.log
 
     cd /path/to/nolog/
-    ssh server.example.com -p2345 sudo tail -f /var/log/nginx/example.com_access.log > test.log
+    ssh server.example.com sudo tail -f /var/log/nginx/example.com_access.log > test.log
 
 shout (throw an event) if a single logfile line matches an reguar expression
 
       //NologEventEmitter.watch(eventname, pattern)
-      mylog.shoutIf('googlebot', /Googlebot/i );
-      mylog.shoutIf('googlebot', "Chrome" );
+      log.shoutIf('googlebot', /Googlebot/i );
+      log.shoutIf('googlebot', "Chrome" );
 
 the `pattern` argument can either be a regular expression or a simple string ( means .*+?|()[]{}\ will be treated as 'normal' characters)
 
-`shout` is an alias for `shoutIf`
+
 
 `shoutIfNot` is the same (but opposite) of `shoutIf` - `shoutIfNot` throws an event if the pattern did not lead to a successfull match.
 
       //NologEventEmitter.shoutIfNot(eventname, pattern)
-      mylog.shoutIfNot('allNotGetRequests', "GET" );
+      log.shoutIfNot('allNotGetRequests', "GET" );
       
 `shoutIf` and `shotIfNot` start so called shout-jobs. 
+
+`si` and `sin` are shortcuts for `shoutIf` and `shoutIfNot`
       
 assign an event handler
       
       //NologEventEmitter.on(eventname, callback)
-      mylog.on('googlebot', function(data){ console.log("a Googlebot");});
+      log.on('googlebot', function(data){ console.log("a Googlebot");});
       
 `on` assigns an event handler to the `NologEventEmitter` listening for the `eventname`.
 
@@ -48,19 +52,23 @@ assign an event handler
 
 as there was nothing found at `shouldIfNot` the `index` value is null, the first value of the array is also `null`. `input` is the parsed log line.
 
+**TODO**
+  - enable streams other than files to get imported
+  - native ssh support?
+
 for other standard methods of NologEventEmitter see EventEmitter in the offical Node.js documentation <http://nodejs.org/docs/v0.4.5/api/events.html#events.EventEmitter>
 
 kill a `shoutIf` or `shoutIfNot` job
       
       //NologEventEmitter.kill(eventname)
-      mylog.kill('googlebot');
+      log.kill('googlebot');
 
 no more `googlebot` events will be thrown. the shout-job with the name `eventname` gets killed.
 
 `unwatch` a file
 
       //NologEventEmitter.unwatch()
-      mylog.unwatch();
+      log.unwatch();
       
 `unwatch` kills all shout-jobs (no more events get thrown) and stops the background task watching the specific file.
 
@@ -70,6 +78,7 @@ if you `kill` the last last shout-job of a watched file, the file is automatical
 
 **usefull stuff**
 
+ - all public methods support chaining (i.e.$n('access.log').s('bot').on('bot', function(d){ ... }); 
  - `nolog.enableDebug(true)` - turns on some debug output via `console.log`
  
  - `NologEventEmitter.file` holds the watched `file` string, default `null`
@@ -79,24 +88,48 @@ if you `kill` the last last shout-job of a watched file, the file is automatical
  
  the `follow` and `wholefile` attribut can be also passed via the `watch` method.
       
-      var mylog = nolog.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
+      var log = nolog.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
+      
+**magic stuff**
 
+`shout` is fluffy shortcut for `shoutIf`
+      
+      //NologEventEmitter.shout(eventname)
+      log.shout('googlebot'); // == mulog.shout('googlebot', /googlebot/i );
+      
+basically it `shout` throws an event with the name `eventname` if a case-iNsEnSeTiVE match for `eventname` was found.
+
+ 
  
 **advanced stuff**
 
 notEvents
 
       //NologEventEmitter.shoutIf(eventname,pattern,enableNotEvent)
-      mylog.shoutIf('bot', /bot/i, true );
+      log.shoutIf('bot', /bot/i, true );
 
 additonally to the success event 'bot' another event is thrown, namely '!bot' if the pattern was not matched. this means, for evey parsed logline an event -either `eventname` or `!eventname` - is thrown.
 
 this is not the same as `shoutIfNot` - `shoutIfNot` throws a success match, if something was not matched. as a matter of fact, `shoutIfNot` also supports `enableNotEvent`
       
       //NologEventEmitter.shoutIfNot(eventname,pattern,enableNotEvent)
-      mylog.shoutIfNot('human', /bot/i, true );
+      log.shoutIfNot('human', /bot/i, true );
 
 if the logline does not match the '/bot/i' the event 'human' is thrown. if the logline matches the event '!human' is thrown. (note: notEvents are less confusing when used with `shoutIf`)
+
+Note: the `shout` shortcut also supports `enableNotEvents` as a second parameter.
+
+
+boolean patterns
+
+`si` and `sin` (and their longer worded aliases `shoutIf` and `shoutIfNot`) also support booleans patterns.
+      
+      //get every line
+      log.si('line', true).on('line', function(data){ ... });
+
+function callback patterns
+
+`si` and `sin` can also handle function patterns.
 
 
 

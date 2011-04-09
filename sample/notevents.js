@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-var nolog = require("../nolog.js");
+var $n = require("../nolog.js");
 var logfile = "../test.log";
-
-nolog.enableDebug(true);
-var mylog = nolog.watch(logfile).shoutIf("bot", /bot/i, true).on("bot", function(data){console.log("bot");}).on("!bot", function(data){ console.log("not a bot");})
+//$n.enableDebug(true);
+var mylog = $n(logfile).shoutIf("bot", /bot/i, true).on("bot", function(data){console.log("bot");}).on("!bot", function(data){ console.log("not a bot");})

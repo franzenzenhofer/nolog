@@ -13,7 +13,7 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
   var ctx = c.getContext("2d");
   var cH = c.height;
   var cW = c.width;
-  var dataPointWidth = Math.floor(cW/127);
+  var dataPointWidth = Math.floor(cW/255);
   var dataPointHeight = 1;
   var rowA = [];
   var drawDataPoint = function (row,color)

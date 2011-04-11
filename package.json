@@ -10,3 +10,23 @@
         "url" : "git://github.com/franzenzenhofer/nolog.git"
     },
 }
+
+{
+    "name" : "nolog",
+    "version" : "0.1",
+    "description" : "event driven real time logfile parser",
+    "main" : "./nolog.js",
+    "repository" : {
+        "type" : "git",
+        "url" : "git://github.com/franzenzenhofer/nolog.git"
+    },
+    "keywords" : [
+        "log",
+        "logs"
+        ],
+    "author" : {
+        "name" : "franz enzenhofer",
+        "email" : "f.enzenhofer@gmail.com",
+        "url" : "http://twitter.com/enzenhofer"
+    }
+}

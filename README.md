@@ -125,8 +125,6 @@ this is not the same as `shoutIfNot` - `shoutIfNot` throws a success match, if s
 
 if the logline does not match the '/bot/i' the event 'human' is thrown. if the logline matches the event '!human' is thrown. (note: notEvents are less confusing when used with `shoutIf`)
 
-Note: the `shout` shortcut also supports `enableNotEvents` as a second parameter.
-
 
 boolean patterns
 
@@ -135,7 +133,7 @@ boolean patterns
       //get every line
       log.si('line', true).on('line', function(data){ ... });
 
-function callback patterns
+function callback patterns (that feature is alpha)
 
 `si` and `sin` can also handle function patterns.
 

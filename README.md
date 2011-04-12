@@ -60,9 +60,6 @@ assign an event handler
 
 as there was nothing found at `shouldIfNot` the `index` value is null, the first value of the array is also `null`. `input` is the parsed log line.
 
-**TODO**
-  - enable streams other than files to get imported
-  - native ssh support?
 
 for other standard methods of NologEventEmitter see EventEmitter in the offical Node.js documentation <http://nodejs.org/docs/v0.4.5/api/events.html#events.EventEmitter>
 
@@ -84,7 +81,17 @@ no more `googlebot` events will be thrown. the shout-job with the name `eventnam
 
 if you `kill` the last last shout-job of a watched file, the file is automatically `unwatch`ed. said that, the `NologEventEmitter` object is still valid, if you add a new shout-job, the file is automatically re-`watch`ed. (think: magic)
 
-**usefull stuff**
+**MAGIC STUFF**
+
+`shout` is fluffy shortcut for `shoutIf`
+      
+      //NologEventEmitter.shout(eventname)
+      log.shout('googlebot'); // == mulog.shout('googlebot', /googlebot/i );
+      
+basically it `shout` throws an event with the name `eventname` if a case-iNsEnSeTiVE match for `eventname` was found.
+
+
+**USEFULL STUFF**
 
  - all public methods support chaining (i.e.$n('access.log').s('bot').on('bot', function(d){ ... }); 
  - `nolog.enableDebug(true)` - turns on some debug output via `console.log`
@@ -98,18 +105,10 @@ if you `kill` the last last shout-job of a watched file, the file is automatical
       
       var log = nolog.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
       
-**magic stuff**
-
-`shout` is fluffy shortcut for `shoutIf`
-      
-      //NologEventEmitter.shout(eventname)
-      log.shout('googlebot'); // == mulog.shout('googlebot', /googlebot/i );
-      
-basically it `shout` throws an event with the name `eventname` if a case-iNsEnSeTiVE match for `eventname` was found.
 
  
  
-**advanced stuff**
+**ADVANCED STUFF**
 
 notEvents
 
@@ -137,6 +136,9 @@ function callback patterns (that feature is alpha)
 
 `si` and `sin` can also handle function patterns.
 
+**TODO**
+  - enable streams other than files to get imported
+  - native ssh support?
 
 
 

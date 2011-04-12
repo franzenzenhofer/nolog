@@ -86,7 +86,7 @@ if you `kill` the last last shout-job of a watched file, the file is automatical
 `shout` is fluffy shortcut for `shoutIf`
       
       //NologEventEmitter.shout(eventname)
-      log.shout('googlebot'); // == mulog.shout('googlebot', /googlebot/i );
+      log.shout('googlebot'); // == log.shout('googlebot', /googlebot/i );
       
 basically it `shout` throws an event with the name `eventname` if a case-iNsEnSeTiVE match for `eventname` was found.
 

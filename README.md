@@ -58,7 +58,7 @@ assign an event handler
 
 `shoutIf` and `shoutIfNot` assigned events return an RegExp return array <https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/RegExp/exec#Description> that's an array with a special `index` and `input` value.
 
-as there was nothing found at `shouldIfNot` the `index` value is null, the first value of the array is also `null`. `input` is the parsed log line.
+as there was nothing found at `shoutIfNot` the `index` value is null, the first value of the array is also `null`. `input` is the parsed log line.
 
 
 for other standard methods of NologEventEmitter see EventEmitter in the offical Node.js documentation <http://nodejs.org/docs/v0.4.5/api/events.html#events.EventEmitter>

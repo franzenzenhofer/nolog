@@ -5,9 +5,17 @@
 
 nolog lets you watch (log)files in real time and matches regular expressions to events.
 
+** New: now an npm package **
+
+installation 
+
+      npm install nolog
+
 usage
 
-      var $n = require("/path/to/nolog/nolog.js");
+      var $n = require("nolog");
+      //or if you don't use npm
+      //var $n = require("/path/to/nolog/nolog.js");
       
 watch a file
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 var http = require("http"), io = require("socket.io");
-var nolog = require("../nolog.js");
+var $n = require("../nolog.js");
 var logfile = "../test.log";
 var clientA = [];
 
@@ -33,7 +33,7 @@ var sendAll = function(msg) {
 }
 
 server.listen(3003);
-var mylog = nolog.watch(logfile).shoutIf("ip", /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/, true).on("ip", function(data){
+var mylog = $n(logfile).shoutIf("ip", /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/, true).on("ip", function(data){
 var sO = {'row':data[1],'color':RGBtoHex(data[2],data[3],data[4])};
 console.log(sO);
 sendAll(sO);

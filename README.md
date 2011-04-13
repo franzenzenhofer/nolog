@@ -56,7 +56,7 @@ assign an event handler
       
 `on` assigns an event handler to the `NologEventEmitter` listening for the `eventname`.
 
-`shoutIf` and `shoutIfNot` assigned events return an RegExp return array <https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/RegExp/exec#Description> that's an array with a special `index` and `input` value.
+`shoutIf` and `shoutIfNot` assigned events return an `RegExp` return array <https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/RegExp/exec#Description> that's an array with a special `index` and `input` value.
 
 as there was nothing found at `shoutIfNot` the `index` value is null, the first value of the array is also `null`. `input` is the parsed log line.
 
@@ -98,13 +98,14 @@ basically it `shout` throws an event with the name `eventname` if a case-iNsEnSe
  
  - `NologEventEmitter.file` holds the watched `file` string, default `null`
  - `NologEventEmitter.follow` enables real time updates, default `true`
- - `NologEventEmitter.wholeFile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
+ - `NologEventEmitter.wholefile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
  - `NologEventEmitter.jobs` array that holds a summary of active shout-jobs assigned ot the currently watched file
  
- the `follow` and `wholefile` attribut can be also passed via the `watch` method.
+ the `follow` and `wholefile` attribut can be also passed as an object via the `watch` method.
       
-      var log = nolog.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
-      
+      var log = $n("/path/to/the/logfile.log", {wholefile:true; follow:false});
+      //alternativly
+      var log = $n.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
 
  
  
@@ -125,19 +126,31 @@ this is not the same as `shoutIfNot` - `shoutIfNot` throws a success match, if s
 if the logline does not match the '/bot/i' the event 'human' is thrown. if the logline matches the event '!human' is thrown. (note: notEvents are less confusing when used with `shoutIf`)
 
 
-boolean patterns
+**boolean patterns**
 
 `si` and `sin` (and their longer worded aliases `shoutIf` and `shoutIfNot`) also support booleans patterns.
       
       //get every line
       log.si('line', true).on('line', function(data){ ... });
+      
+the `data` value will always be a `RegExp` return array.
 
-function callback patterns (that feature is alpha)
+**function callback patterns**
 
-`si` and `sin` can also handle function patterns.
+`si` and `sin` (`searchIf` and `searchIfNot`) can also handle function patterns.
+
+      //NologEventEmitter.searchIf(eventname, function-pattern). ...
+      log.si('uniqueip', function(line){ ... }).on('uniqueip', function(returnvalue){ ... });
+      
+
+the return value of the function pattern gets returned to the event callback. 
+
+note: function patterns do not make too much sense with `sin` or notEvents, as the return value will always be a falsy value.
 
 **TODO**
+
   - enable streams other than files to get imported
+  
   - native ssh support?
 
 

@@ -8,5 +8,5 @@
   "licenses"      : ["MIT"],
   "dependencies"  : [],
   "main"          : "./nolog.js",
-  "version"       : "0.1.1-1"
+  "version"       : "0.1.2-1"
 }

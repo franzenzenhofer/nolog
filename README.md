@@ -104,7 +104,7 @@ basically it `shout` throws an event with the name `eventname` if a case-iNsEnSe
  the `follow` and `wholefile` attribut can be also passed as an object via the `watch` method.
       
       var log = $n("/path/to/the/logfile.log", {wholefile:true; follow:false});
-      //alternativly
+      //alternatively
       var log = $n.watch("/path/to/the/logfile.log", {wholefile:true; follow:false});
 
  

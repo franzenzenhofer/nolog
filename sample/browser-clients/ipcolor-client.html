@@ -7,15 +7,36 @@
         "use strict";
 var d = 0;
 $(document).ready(function() {
-
-$("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $(window).height() + '" style="border:0px solid red;"></canvas>');
-  var c = document.getElementById("c");
-  var ctx = c.getContext("2d");
+var ww = (((window.innerWidth)*1)-13);
+var wh = window.innerHeight*1.0;
+$("body").append('<canvas id="c" width="' + ww + '" height="' + wh + '" style="border:0px solid red;"></canvas>');
+  var c = window.c = document.getElementById("c");
+  var ctx = window.ctx = c.getContext("2d");
   var cH = c.height;
   var cW = c.width;
   var dataPointWidth = Math.floor(cW/255);
   var dataPointHeight = 1;
   var rowA = [];
+  
+  var grid = function(w,h,s,y)
+  {
+    var y = y || 0;
+    var drawline = function(x,h,y)
+    {
+      window.ctx.moveTo(x,y);
+      window.ctx.lineTo(x,h);
+      window.ctx.strokeStyle = "#eee";
+      window.ctx.stroke();
+    }
+  
+    for(var x = 0.5; x < w; x=x+s)
+    {
+      drawline(x,h,y);  
+    }
+  }
+  
+  grid(window.c.width, 25, dataPointWidth);
+  
   var drawDataPoint = function (row,color)
   {
     if(rowA[row]!==undefined)
@@ -35,7 +56,15 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
     //console.log(x+' '+y+' '+dataPointWidth+' '+dataPointHeight)
     if(x+1&&y+1)
     {
-      ctx.fillRect(x, y, dataPointWidth, dataPointHeight);
+      if(y>window.c.height)
+      {
+        var gid = window.ctx.getImageData(0,0,window.c.width,window.c.height);
+        window.c.height=y+100;
+        window.ctx.putImageData(gid,0,0);
+      }
+
+      window.ctx.fillRect(x, y, dataPointWidth, dataPointHeight);
+
     }
     
    
@@ -59,6 +88,7 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
   c.connect()
 });</script>
   </head>
-  <body style='margin:0px;padding:0px;overflow:hidden;'>
+  <body style='margin:0px;padding:0px;overflow-y: scroll;
+overflow-x: hidden;'>
   </body>
 </html>

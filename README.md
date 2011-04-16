@@ -100,8 +100,14 @@ basically it `shout` throws an event with the name `eventname` if a case-iNsEnSe
  - `NologEventEmitter.follow` enables real time updates, default `true`
  - `NologEventEmitter.wholefile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
  - `NologEventEmitter.jobs` array that holds a summary of active shout-jobs assigned ot the currently watched file
+ - `NologEventEmitter.errcallback(data)` a method that gets called if something goes seriously wrong, per default it throws an error.
+ - `NologEventEmitter.errcallback()` a method that gets called whenever a file gets `unwatch`ed, default does nothing.
  
- the `follow` and `wholefile` attribut can be also passed as an object via the `watch` method.
+ 
+ 
+ 
+ 
+ the NologEventEmitter attributs and methods can be also passed as an object via the `watch` method.
       
       var log = $n("/path/to/the/logfile.log", {wholefile:true; follow:false});
       //alternatively
@@ -149,7 +155,9 @@ note: function patterns do not make too much sense with `sin` or notEvents, as t
 
 **TODO**
 
-  - enable streams other than files to get imported
+  - readable streams now supported (alpha)
+  
+  - make encoding editable, default utf8
   
   - native ssh support?
 

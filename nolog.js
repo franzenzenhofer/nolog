@@ -111,7 +111,7 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
   };
   var errcallback = errcallback || function(data) {
     d("stderr: " + data);
-    throw new Error(data);return data
+    throw new Error(data);
   };
   var exitcallback = function(code) {
     d("tail process exited with code " + code)
@@ -153,20 +153,37 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
   var ifnot = !!ifnot;
   var notevent = !!notevent;
   var mytail;
+  var myDataStream;
   if(!file) {
     throw new Error("critical error in nolog - file must not be undefined");
   }
-  if(tailHolder[file]) {
-    mytail = tailHolder[file].process
-  }else {
-    mytail = tail(file, follow, wholefile);
-    tailHolder[file] = {};
-    tailHolder[file].process = mytail;
-    tailHolder[file].listenerA = []
+  if(typeof file === 'string')
+  {
+    console.log('is File');
+    if(tailHolder[file]) {
+      mytail = tailHolder[file].process
+   }else {
+      mytail = tail(file, follow, wholefile);
+      tailHolder[file] = {};
+      tailHolder[file].process = mytail;
+      tailHolder[file].listenerA = []
+    }
+    mytail.stdin.setEncoding("utf8");
+    mytail.stdout.setEncoding("utf8");
+    mytail.stderr.setEncoding("utf8");
+    myDataStream = mytail.stdout; 
   }
-  mytail.stdin.setEncoding("utf8");
-  mytail.stdout.setEncoding("utf8");
-  mytail.stderr.setEncoding("utf8");
+  else if(typeof file == 'object' && file.readable === true &&  file.pause && file.destroy && file.resume)
+  {
+      d('is ReadableStream Object');
+      file.setEncoding("utf8");
+      myDataStream = file;
+  }
+  else
+  {
+    throw new Error('file must either be a path/to/file/string or a ReadableStream');
+  }
+  
   var listener = function(data) {
     var dataA = data.split("\n");
     for(var i = 0;i < dataA.length;i++) {
@@ -237,15 +254,12 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
       }
     }
   };
-  mytail.stdout.on("data", listener);
-  tailHolder[file].listenerA.push(listener);
-  mytail.stderr.on("data", function(data) {
-    errcallback(data)
-  });
-  mytail.on("exit", exitcallback);
-  var kill = function() {
-    mytail.stdout.removeListener("data", listener);
-    if(tailHolder[file] && tailHolder[file].listenerA) {
+  myDataStream.on("data", listener);
+  
+  
+    var kill = function() {
+    myDataStream.removeListener("data", listener);
+    if(tailHolder && tailHolder[file] && tailHolder[file].listenerA) {
       var li = tailHolder[file].listenerA.indexOf(listener);
       if(li !== -1) {
         tailHolder[file].listenerA.splice(li, 1);
@@ -256,13 +270,27 @@ var job = function(file, pattern, eventname, callback, errcallback, exitcallback
         self.killAll(true)
       }
     }else {
-      throw new Error("Can't kill what is allready dead!");
+      //throw new Error("Can't kill what is allready dead!");
     }
   };
   var killAll = function() {
     self.killAll()
   };
-  var pid = {"tail":mytail.pid};
+  
+  if(typeof file === 'string' && mytail)
+  {
+    tailHolder[file].listenerA.push(listener);
+    mytail.stderr.on("data", function(data) {
+    errcallback(data)
+   });
+    mytail.on("exit", exitcallback);
+    var pid = {"tail":mytail.pid};
+  }
+  else
+  {
+    var pid = undefined;
+  }
+  
   var jobO = {"file_pid":pid, "eventname":eventname, "pattern":pattern, "file":file, "kill":kill, "killAll":killAll};
   return jobO
 };

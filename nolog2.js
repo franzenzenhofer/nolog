@@ -27,6 +27,7 @@ NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enableNotEven
  return self;
 }
 NologEventEmitter.prototype.si = NologEventEmitter.prototype.shoutIf;
+
 //sin - shoutIfNot
 NologEventEmitter.prototype.shoutIfNot = function(eventname, pattern, enableNotEvent)
 {
@@ -36,7 +37,8 @@ NologEventEmitter.prototype.shoutIfNot = function(eventname, pattern, enableNotE
  return self;
 }
 NologEventEmitter.prototype.sin = NologEventEmitter.prototype.shoutIfNot;
-//s - a shoutIf shortcut
+
+//s - shout - a shoutIf shortcut
 NologEventEmitter.prototype.shout = function(nameandpattern, enableNotEvents) {
   var self = this;
   if(typeof nameandpattern == "string") {
@@ -48,9 +50,9 @@ NologEventEmitter.prototype.shout = function(nameandpattern, enableNotEvents) {
 };
 NologEventEmitter.prototype.s = NologEventEmitter.prototype.shout;
 
-//kill
+//kill - kills the job with the name
 
-//killAll
+//killAll - kills all jobs of this NologEventEmitter
 
 //create a brand new NologEventEmitter
 var createNologEventEmitter = function(input, params)
@@ -93,7 +95,15 @@ var createFile  = function(pathtofile, params)
 
 }
 
+/** JOB **/
 var Job = function () { }
+//main job attributes
+//input
+//eventname
+//pattern
+
+//main job methods
+//kill
 
 var createJob = function(aReadableStream, params)
 {

@@ -9,8 +9,9 @@ var options = {
 
 http.get(options, function(res) {
   //console.dir(res);
+  //note: if you handle  a ready made readable stream to nolog, be sure that it's propably encoded
   res.setEncoding('utf8');
-  $n(res).shoutIf('sitemap', /sitemap/i);
+  $n("dgdsgdghfd").shoutIf('sitemap', /http.*\//i).on('sitemap', function(data){ console.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');console.dir(data); });
   //$n(res).s('sitemap').on('sitemap', function(data){ console.log(data.input); })
   
   /*res.on('data',function(chunk)

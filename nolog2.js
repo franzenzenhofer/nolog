@@ -4,8 +4,12 @@ var events = require("events");
 var spawn = require("child_process").spawn;
 
 var debugIt = true;
-var enableDebug = function(enable) { debugIt = enableDebug || false; return this;}
-var d = function(m) { if(debugIt){ console.log(m); } return this; }
+var enableDebug = function(enable) { debugIt = enable || false; return this;}
+var d = function(m) { if(debugIt){ 
+console.log('---------------------->>>>');
+console.log(m);
+console.log('----------------------<<<<');
+} return this; }
 
 var NologEventEmitter = function() { d('NologEventEmitter constructor'); events.EventEmitter.call(this) };
 NologEventEmitter.super_ = events.EventEmitter;
@@ -15,10 +19,40 @@ NologEventEmitter.prototype = Object.create(events.EventEmitter.prototype, {cons
 //input
 NologEventEmitter.prototype.input = undefined;
 NologEventEmitter.prototype.readablestream = undefined;
+NologEventEmitter.prototype.readablestream_encoding = 'utf8';
+//file is a alias for readablestream
+NologEventEmitter.prototype.file = NologEventEmitter.prototype.readablestream;
+NologEventEmitter.prototype.file_encoding = NologEventEmitter.prototype.readablestream_encoding;
+
+//only if readabelstream is a file readable stream created by nolog
+NologEventEmitter.prototype.follow = true;
+NologEventEmitter.prototype.wholefile = false;
+NologEventEmitter.prototype.spawn = undefined;
+NologEventEmitter.prototype.fileErrorCallback = function(data) { throw new Error('Nolog File Error: '+data); } 
+//NologEventEmitter.prototype.fileExitCallback = function(data) { d('Nolog File Exit: '+d); } 
+
+
 //jobs 
 NologEventEmitter.prototype.jobs = [];
 
 //main NologEventEmitter methods
+
+//helper method to set the encoding of the readable stream
+NologEventEmitter.prototype.setEncoding = function(enc)
+{
+  var self = this;
+  var enc = enc || self.readablestream_encoding || 'utf8';
+  if(self.readablestream&&self.readablestream.setEncoding)
+  {
+    self.readablestream.setEncoding(enc);
+  }
+  if(self.spawn&&self.spawn.stderr&&self.spawn.stderr.setEncoding)
+  {
+    self.spawn.stderr.setEncoding(enc);
+  }
+  self.readablestream_encoding=enc;
+  return self;
+}
 
 //gets an input, returns a readableStream
 NologEventEmitter.prototype.getReadableStream = function (input)
@@ -34,7 +68,7 @@ NologEventEmitter.prototype.getReadableStream = function (input)
     //input is readable stream
     d("input is a readable stream");
     self.readablestream = input;
-    return self.readablestream;
+    
   }
   else if(typeof input == 'string')
   {
@@ -44,6 +78,12 @@ NologEventEmitter.prototype.getReadableStream = function (input)
     {
         d('input is a path-to-file string');
         //createFile
+        self.spawn = tail(input, self.follow, self.wholefile);
+        //mytail.stdin.setEncoding("utf8");
+        self.readablestream = self.spawn.stdout;
+        self.spawn.stderr.on('data', self.fileErrorCallback );
+        //set the encoding to the default value
+        self.setEncoding();
     }
     else
     {
@@ -55,6 +95,38 @@ NologEventEmitter.prototype.getReadableStream = function (input)
   {
     throw new Error("input must either be a readable stream or a path-to-file string");
   }
+  return self.readablestream;
+}
+//datalistener = the basic listener of readable stream
+//loops through the jobs array
+NologEventEmitter.prototype.dataListener = function(data)
+{
+  var self = this;
+  var dataA = data.split("\n");
+  var line;
+  //loop throug evey line
+  for(var i = 0;i < dataA.length;i++)
+  {
+    if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10)
+    {
+      //d(data[i]);
+      stumpA[0] = dataA[i];
+      //d(stumpA);
+    }
+    else 
+    {
+      if(i == 0 && stumpA[0]) {
+        stumpA[1] = dataA[i];
+        d(stumpA);
+        line = stumpA.join("");
+        stumpA.length = 0
+      }else {
+        line = dataA[i]
+      }
+    }
+    //now loop through every jobs patternfunction
+  }
+  return self;
 }
 //si - shoufIf
 NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enableNotEvent)
@@ -63,9 +135,14 @@ d('shoutIf '+eventname+' '+pattern+' ');
  var self = this;
  var enableNotEvent = enableNotEvent || false;
  var newJob = createJob(self.getReadableStream(self.input), {
-  'callback':function(eventname, data) { self.emit(eventname, data) },
-  'enableNotEvent':enableNotEvent, 'pattern':pattern});
+  'callback':function(eventname, data) { self.emit(eventname, data); },
+  'enableNotEvent':enableNotEvent,
+  'pattern':pattern,
+  'eventname':eventname
+  });
  self.jobs.push(newJob);
+ //if it isn't started yet, assign an event handler to the data event of the readable stream
+ 
  return self;
 }
 NologEventEmitter.prototype.si = NologEventEmitter.prototype.shoutIf;
@@ -93,9 +170,47 @@ NologEventEmitter.prototype.shout = function(nameandpattern, enableNotEvents) {
 NologEventEmitter.prototype.s = NologEventEmitter.prototype.shout;
 
 //kill - kills the job with the name
+NologEventEmitter.prototype.kill = function(eventname)
+{
+  var self = this;
+  //go through the jobs array
+  var newjobsA = [];
+  for(var i = 0; i<self.jobs.lenght; i++)
+  {
+    if(self.jobs[i].eventname == eventname)
+    {
+      self.jobs[i].kill();
+    }
+    else
+    {
+      newjobsA.push(self.jobs[i]);
+    }
+  }
+  self.jobs = newjobsA;
+  if(self.jobs.length === 0) { self.killAll(true); }
+  return self;
+}
 
 //killAll - kills all jobs of this NologEventEmitter
+NologEventEmitter.prototype.killAll = function(allJobsAreDead)
+{
+  var self = this;
 
+  if(!allJobsAreDead && self.jobs.length>0)
+  {
+    for(var i = 0; i<self.jobs.length; i++)
+    {
+      self.jobs[i].kill();
+    }
+    self.jobs = [];
+  }
+  
+  if(self.spawn&&self.spawn.kill)
+  {
+    self.spawn.kill('SIGHUP');
+  }
+  return self;
+}
 //create a brand new NologEventEmitter
 var createNologEventEmitter = function(input, params)
 { 
@@ -155,6 +270,7 @@ Job.prototype.patternfunction = undefined;
 //callback
 Job.prototype.callback = function(eventname, data){ var self = this; d(eventname+': '+data); return self;}
 
+
 //ifnot
 Job.prototype.ifnot = false;
 
@@ -164,18 +280,20 @@ Job.prototype.notevents = false;
 //main job methods
 
 //_listener - listens on the data event of the readablestram
+Job.prototype.listener = undefined;
 Job.prototype._listener = function(data)
 {
   var self = this;
   var pattern = self.pattern;
   var callback = self.callback;
+  var eventname = self.eventname;
   d('Job _listener');
   
   var stumpA = [];
   return function(data)
   {
-     d('######################################################');
-     d(data);
+     //d('######################################################');
+     //d(data);
      var dataA = data.split("\n");
      var line;
      //loop throug evey line
@@ -183,19 +301,27 @@ Job.prototype._listener = function(data)
      {
       if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10)
       {
-        stumpA[0] = dataA[i]
+        //d(data[i]);
+        stumpA[0] = dataA[i];
+        //d(stumpA);
       }
       else 
       {
         if(i == 0 && stumpA[0]) {
           stumpA[1] = dataA[i];
+          d(stumpA);
           line = stumpA.join("");
           stumpA.length = 0
         }else {
           line = dataA[i]
         }
       }
-      self.patternfunction(line,pattern);
+      var match = self.patternfunction(line,pattern);
+      if(match)
+      {
+        //d(match);
+        callback(eventname, match);
+      }
      }
   }
 }
@@ -204,7 +330,8 @@ Job.prototype._listener = function(data)
 Job.prototype.kill = function()
 {
   var self = this;
-  //self.readablestream.removeListener("data", self.listener);
+  self.readablestream.removeListener("data", self.listener);
+  return self;
 }
 
 
@@ -229,8 +356,8 @@ var createJob = function(readablestream, params)
       newjob.pattern = new RegExp(RegExp.escape(newjob.pattern))
   }
   var typeofpattern = typeof newjob.pattern;
-  d('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-  d(typeofpattern);
+  //d('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+  d('typeofpattern '+typeofpattern);
   if(typeofpattern === 'function')
   {
     if(RegExp.isRegExp(newjob.pattern))
@@ -262,7 +389,13 @@ var createJob = function(readablestream, params)
   {
     throw new Error ('pattern '+newjob.pattern+' is not supported');
   }
-  newjob.readablestream.on('data',  newjob._listener() );
+  /**
+  //wrong shit ... 
+  self.listener = newjob._listener();
+  newjob.readablestream.on('data',  self.listener );
+  **/
+  //handline the end event of a file
+  //newjob.readablestream.on('end',  myListenerFunction );
   return newjob;
   
 }
@@ -271,6 +404,9 @@ var createJob = function(readablestream, params)
 var nolog = { 
   'watch': createNologEventEmitter
 }
+nolog.watch.w = nolog.watch;
+nolog.watch.watch = nolog.watch;
+nolog.watch.enableDebug = enableDebug;
 module.exports = nolog.watch;
 
 //some utility methods
@@ -281,4 +417,18 @@ RegExp.escape = function(str) {
 
 RegExp.isRegExp = function(obj) {
   return!!(obj && obj.test && obj.exec && (obj.ignoreCase || obj.ignoreCase === false))
+};
+
+//create a tail
+var tail = function(file, follow, wholefile) {
+  var aA = [];
+  if(follow) {
+    aA.push("-f")
+  }
+  if(wholefile) {
+    aA.push("-c");
+    aA.push("+1")
+  }
+  aA.push(file);
+  return spawn("tail", aA)
 };

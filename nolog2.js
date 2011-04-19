@@ -99,34 +99,68 @@ NologEventEmitter.prototype.getReadableStream = function (input)
 }
 //datalistener = the basic listener of readable stream
 //loops through the jobs array
-NologEventEmitter.prototype.dataListener = function(data)
+NologEventEmitter.prototype.startDataListener = function()
 {
+  d('NologEventEmitter startDataListener');
   var self = this;
-  var dataA = data.split("\n");
-  var line;
-  //loop throug evey line
-  for(var i = 0;i < dataA.length;i++)
+  //d(self.listeners('data'));
+  if(!self.listeners('data').length)
   {
-    if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10)
-    {
-      //d(data[i]);
-      stumpA[0] = dataA[i];
-      //d(stumpA);
-    }
-    else 
-    {
-      if(i == 0 && stumpA[0]) {
-        stumpA[1] = dataA[i];
-        d(stumpA);
-        line = stumpA.join("");
-        stumpA.length = 0
-      }else {
-        line = dataA[i]
-      }
-    }
-    //now loop through every jobs patternfunction
+    d('first time start datalistener');
+    self.dataListener = self._dataListener();
+    self.readablestream.on('data', self.dataListener);
   }
   return self;
+}
+NologEventEmitter.prototype.dataListener = undefined;
+NologEventEmitter.prototype._dataListener = function(data)
+{
+  var self = this;
+
+ 
+ 
+  var stumpA = [];
+  return function(data) {
+   // d(data);
+    var dataA = data.split("\n");
+    var line;
+    //loop throug evey line
+    for(var i = 0;i < dataA.length;i++)
+    {
+      if(i == dataA.length - 1 && data.charCodeAt(dataA[0].lenght - 1) != 10)
+      {
+        //d(data[i]);
+        stumpA[0] = dataA[i];
+        //d(stumpA);
+      }
+      else 
+      {
+        if(i == 0 && stumpA[0]) {
+          stumpA[1] = dataA[i];
+          d(stumpA);
+          line = stumpA.join("");
+          stumpA.length = 0
+        }else {
+          line = dataA[i]
+        }
+      }
+      //now loop through every jobs patternfunction
+      
+      for(var j = 0; j<self.jobs.length; j++)
+      {
+        //d(self.jobs[j].patternfunction);
+        var match = self.jobs[j].patternfunction(line, self.jobs[j].pattern);
+      //  d(self.jobs[j].patternfunction+' ');
+        if(match)
+        {
+        d(match);
+         self.jobs[j].callback( self.jobs[j].eventname, match);
+        }
+      }
+    }
+    return self;
+  }
+ 
 }
 //si - shoufIf
 NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enableNotEvent)
@@ -134,14 +168,18 @@ NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enableNotEven
 d('shoutIf '+eventname+' '+pattern+' ');
  var self = this;
  var enableNotEvent = enableNotEvent || false;
- var newJob = createJob(self.getReadableStream(self.input), {
+ self.readablestream = self.getReadableStream(self.input);
+ var newJob = createJob(self.readablestream, {
   'callback':function(eventname, data) { self.emit(eventname, data); },
   'enableNotEvent':enableNotEvent,
   'pattern':pattern,
-  'eventname':eventname
+  'eventname':eventname,
+  'finalize':function(){ self.startDataListener(); }
   });
  self.jobs.push(newJob);
  //if it isn't started yet, assign an event handler to the data event of the readable stream
+ 
+ 
  
  return self;
 }
@@ -266,6 +304,8 @@ Job.prototype.eventname = "nologEventWithId" + function() {
 //pattern
 Job.prototype.pattern = undefined;
 Job.prototype.patternfunction = undefined;
+//finalize
+Job.prototype.finalize = undefined;
 
 //callback
 Job.prototype.callback = function(eventname, data){ var self = this; d(eventname+': '+data); return self;}
@@ -280,7 +320,7 @@ Job.prototype.notevents = false;
 //main job methods
 
 //_listener - listens on the data event of the readablestram
-Job.prototype.listener = undefined;
+/* Job.prototype.listener = undefined;
 Job.prototype._listener = function(data)
 {
   var self = this;
@@ -324,13 +364,14 @@ Job.prototype._listener = function(data)
       }
      }
   }
-}
+}*/
 
 //kill
 Job.prototype.kill = function()
 {
   var self = this;
-  self.readablestream.removeListener("data", self.listener);
+  //not working like this
+  //self.readablestream.removeListener("data", self.listener);
   return self;
 }
 
@@ -396,6 +437,10 @@ var createJob = function(readablestream, params)
   **/
   //handline the end event of a file
   //newjob.readablestream.on('end',  myListenerFunction );
+  if(newjob && newjob.finalize)
+  {
+    newjob.finalize();
+  }
   return newjob;
   
 }

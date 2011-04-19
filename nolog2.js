@@ -99,16 +99,18 @@ NologEventEmitter.prototype.getReadableStream = function (input)
 }
 //datalistener = the basic listener of readable stream
 //loops through the jobs array
+NologEventEmitter.prototype._datalistenerstarted = false;
 NologEventEmitter.prototype.startDataListener = function()
 {
   d('NologEventEmitter startDataListener');
   var self = this;
   //d(self.listeners('data'));
-  if(!self.listeners('data').length)
+  if(!self._datalistenerstarted)
   {
     d('first time start datalistener');
     self.dataListener = self._dataListener();
     self.readablestream.on('data', self.dataListener);
+    self._datalistenerstarted==true;
   }
   return self;
 }

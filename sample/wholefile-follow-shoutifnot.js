@@ -2,7 +2,7 @@
 var nolog = require("../nolog.js");
 var logfile = "../test.log";
 
-nolog.enableDebug(true);
+nolog.enableDebug(false);
 
 var mylog = nolog.watch(logfile, { follow:false, wholefile:true });
 /*

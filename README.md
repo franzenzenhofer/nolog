@@ -96,12 +96,10 @@ basically it `shout` throws an event with the name `eventname` if a case-iNsEnSe
  - all public methods support chaining (i.e.$n('access.log').s('bot').on('bot', function(d){ ... }); 
  - `nolog.enableDebug(true)` - turns on some debug output via `console.log`
  
- - `NologEventEmitter.file` holds the watched `file` string, default `null`
  - `NologEventEmitter.follow` enables real time updates, default `true`
  - `NologEventEmitter.wholefile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
- - `NologEventEmitter.jobs` array that holds a summary of active shout-jobs assigned ot the currently watched file
- - `NologEventEmitter.errcallback(data)` a method that gets called if something goes seriously wrong, per default it throws an error.
- - `NologEventEmitter.errcallback()` a method that gets called whenever a file gets `unwatch`ed, default does nothing.
+ - `NologEventEmitter.jobs` array that holds the jobs of the currently watched file
+ - `NologEventEmitter.errcallback(data)` a method that gets called if something goes seriously wrong while watching a file, per default it throws an error.
  
  
  
@@ -155,11 +153,13 @@ note: function patterns do not make too much sense with `sin` or notEvents, as t
 
 **TODO**
 
-  - readable streams now supported (alpha)
+  - readable streams now supported (done)
   
-  - make encoding editable, default utf8
+  - make encoding editable, default utf8 (done)
   
-  - native ssh support?
+  - add an exitcallback
+  
+  - add before and after (every line) hooks
 
 
 

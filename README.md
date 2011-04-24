@@ -11,7 +11,7 @@ installation
 
       npm install nolog
 
-usage
+usage 
 
       var $n = require("nolog");
       //or if you don't use npm
@@ -24,6 +24,8 @@ watch a file
       var log = $n("/path/to/the/logfile.log");
       
 alternativly to `$n(path)` one can also write `$n.watch(path)`
+
+you can either watch a file (just pass a "path/to/file-string") or any readableStream (http, https, ...) see <http://nodejs.org/docs/v0.4.6/api/streams.html#readable_Stream>
 
 note: to test the included examples localy you might want to funnel your webservers logfiles to a local test.log
 
@@ -98,8 +100,9 @@ basically it `shout` throws an event with the name `eventname` if a case-iNsEnSe
  
  - `NologEventEmitter.follow` enables real time updates, default `true`
  - `NologEventEmitter.wholefile` parses the whole file from the beginning, default `false` (note: handle with care, can fire millions of events at once, not suitable for browser clients applications)
+ - `NologEventEmitter.setEncoding(encoding)` - per default every file is parsed as 'utf8'
  - `NologEventEmitter.jobs` array that holds the jobs of the currently watched file
- - `NologEventEmitter.errcallback(data)` a method that gets called if something goes seriously wrong while watching a file, per default it throws an error.
+ - `NologEventEmitter.fileErrorCallback(error)` a method that gets called if something goes seriously wrong while watching a file, per default it throws an error.
  
  
  
@@ -153,13 +156,13 @@ note: function patterns do not make too much sense with `sin` or notEvents, as t
 
 **TODO**
 
-  - readable streams now supported (done)
+  - readable streams support (done)
   
   - make encoding editable, default utf8 (done)
   
-  - add an exitcallback
+  - add an exitcallback (open)
   
-  - add before and after (every line) hooks
+  - add before and after (every line) hooks (open)
 
 
 

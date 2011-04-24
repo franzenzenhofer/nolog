@@ -450,11 +450,7 @@ var createJob = function(readablestream, params)
   {
     throw new Error ('pattern '+newjob.pattern+' is not supported');
   }
-  /**
-  //wrong shit ... 
-  self.listener = newjob._listener();
-  newjob.readablestream.on('data',  self.listener );
-  **/
+
   //handline the end event of a file
   //newjob.readablestream.on('end',  myListenerFunction );
   if(newjob && newjob.finalize)

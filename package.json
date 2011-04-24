@@ -5,8 +5,12 @@
   "keywords"      : ["logs", "log"],
   "author"        : "Franz Enzenhofer <f.enzenhofer@gmail.com>",
   "contributors"  : [],
-  "licenses"      : ["MIT"],
+   "licenses": [
+     {
+        "type": "MIT"
+     }
+   ],
   "dependencies"  : [],
   "main"          : "./nolog.js",
-  "version"       : "0.1.2-1"
+  "version"       : "0.2.0-1"
 }

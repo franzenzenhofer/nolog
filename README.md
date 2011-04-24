@@ -3,7 +3,7 @@
   - Author: Franz Enzenhofer http://twitter.com/enzenhofer
   - Thx: Tupalo.com for the awesome Hack Week <http://tupalo.com> 
 
-nolog lets you watch (log)files in real time and matches regular expressions to events.
+nolog lets you watch (log)files in real time and matches patterns (regular expressions, functions, booleans) to events.
 
 ** New: now an npm package **
 

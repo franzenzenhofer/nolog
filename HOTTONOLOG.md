@@ -104,9 +104,9 @@ if you don't like RegExp you can pass functions as patterns. functions get the c
 
 booleans - `true` will always match, `false` will never match.
 
-** notevents **
+**notevents**
 
-ok, if you have come so far you are definitly really into this topic. 
+ok, if you have come so far you are definitly really into this topic. (coming soon)
 
 
 

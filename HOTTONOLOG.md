@@ -4,9 +4,11 @@ How to Nolog
 **Nolog - just listen to your logfiles.**
 
 nolog does
+
  * watch
  * shout
  * listen
+
 to your logfiles.
 
 
@@ -15,9 +17,11 @@ or to put it another way
 nolog matches patterns in logfiles to events, in real time. so stop thinking about logfiles as a big chunk of complicated data that lies around rotting somewhere on your server. logfiles are collections of events, time to treat them as such.
 
 nolog is a new way to 
+
  * parse
  * watch
  * think about 
+
 logfiles (done in node.js)
 
 **getting started**

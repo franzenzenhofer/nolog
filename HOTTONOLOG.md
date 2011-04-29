@@ -1,6 +1,7 @@
-how to Nolog
+How to Nolog
+===
 
-Nolog - just listen to your logfiles.
+**Nolog - just listen to your logfiles.**
 
 nolog does
  * watch

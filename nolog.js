@@ -137,6 +137,7 @@ NologEventEmitter.prototype._dataListener = function(data)
   var stumpA = [];
   return function(data) {
    // d(data);
+   d('dataevent');
     var dataA = data.split("\n");
     var line;
     //loop throug evey line

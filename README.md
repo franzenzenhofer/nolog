@@ -36,7 +36,7 @@ shout (throw an event) if a single logfile line matches an reguar expression
 
       //NologEventEmitter.watch(eventname, pattern)
       log.shoutIf('googlebot', /Googlebot/i );
-      log.shoutIf('googlebot', "Chrome" );
+      log.shoutIf('chrome', "Chrome" );
 
 the `pattern` argument can either be a regular expression or a simple string ( means .*+?|()[]{}\ will be treated as 'normal' characters)
 

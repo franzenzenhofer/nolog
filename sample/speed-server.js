@@ -18,7 +18,7 @@ var sendAll = function(msg) {
       clientA.splice(clientA.indexOf(a), 1)
     }
   });
- 
+
 }
 server.listen(3004);
 var log = $n(logfile).si('speed',function(line){

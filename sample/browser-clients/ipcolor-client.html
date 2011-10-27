@@ -2,7 +2,7 @@
   <head>
     <title>ipcolor nolog example</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
-        <script src="http://cdn.socket.io/stable/socket.io.js"></script> 
+        <script src="http://cdn.socket.io/stable/socket.io.js"></script>
         <script>
         "use strict";
 var d = 0;
@@ -17,7 +17,7 @@ $("body").append('<canvas id="c" width="' + ww + '" height="' + wh + '" style="b
   var dataPointWidth = Math.floor(cW/255);
   var dataPointHeight = 1;
   var rowA = [];
-  
+
   var grid = function(w,h,s,y)
   {
     var y = y || 0;
@@ -28,15 +28,15 @@ $("body").append('<canvas id="c" width="' + ww + '" height="' + wh + '" style="b
       window.ctx.strokeStyle = "#eee";
       window.ctx.stroke();
     }
-  
+
     for(var x = 0.5; x < w; x=x+s)
     {
-      drawline(x,h,y);  
+      drawline(x,h,y);
     }
   }
-  
+
   grid(window.c.width, 25, dataPointWidth);
-  
+
   var drawDataPoint = function (row,color)
   {
     if(rowA[row]!==undefined)
@@ -66,11 +66,11 @@ $("body").append('<canvas id="c" width="' + ww + '" height="' + wh + '" style="b
       window.ctx.fillRect(x, y, dataPointWidth, dataPointHeight);
 
     }
-    
-   
+
+
   }
 
-  
+
   var c = new io.Socket("127.0.0.1", {port:3003, transports:["websocket"]});
   c.on("connect", function() {
     c.send("start");
@@ -81,7 +81,7 @@ $("body").append('<canvas id="c" width="' + ww + '" height="' + wh + '" style="b
         //console.log(b.color);
         drawDataPoint(b.row, b.color);
     }
-    
+
   });
   c.on("disconnect", function() {
   });

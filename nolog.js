@@ -8,11 +8,11 @@ var debugIt = false;
 var enableDebug = function(enable) { debugIt = enable || false; return this;}
 var d = function(m) {
 
-if(debugIt){ 
+if(debugIt){
 
   if(typeof m === 'function')
   {
-    return m();  
+    return m();
   }
   else
   {
@@ -41,11 +41,11 @@ NologEventEmitter.prototype.file_encoding = NologEventEmitter.prototype.readable
 NologEventEmitter.prototype.follow = true;
 NologEventEmitter.prototype.wholefile = false;
 NologEventEmitter.prototype.spawn = undefined;
-NologEventEmitter.prototype.fileErrorCallback = function(data) { throw new Error('Nolog File Error: '+data); } 
-//NologEventEmitter.prototype.fileExitCallback = function(data) { d('Nolog File Exit: '+d); } 
+NologEventEmitter.prototype.fileErrorCallback = function(data) { throw new Error('Nolog File Error: '+data); }
+//NologEventEmitter.prototype.fileExitCallback = function(data) { d('Nolog File Exit: '+d); }
 
 
-//jobs 
+//jobs
 NologEventEmitter.prototype.jobs = [];
 
 //main NologEventEmitter methods
@@ -81,7 +81,7 @@ NologEventEmitter.prototype.getReadableStream = function (input)
     //input is readable stream
     d("input is a readable stream");
     self.readablestream = input;
-    
+
   }
   else if(typeof input == 'string')
   {
@@ -100,9 +100,9 @@ NologEventEmitter.prototype.getReadableStream = function (input)
     }
     else
     {
-    
+
     }
-  
+
   }
   else
   {
@@ -132,8 +132,8 @@ NologEventEmitter.prototype._dataListener = function(data)
 {
   var self = this;
 
- 
- 
+
+
   var stumpA = [];
   return function(data) {
    // d(data);
@@ -149,7 +149,7 @@ NologEventEmitter.prototype._dataListener = function(data)
         stumpA[0] = dataA[i];
         //d(stumpA);
       }
-      else 
+      else
       {
         if(i == 0 && stumpA[0]) {
           stumpA[1] = dataA[i];
@@ -161,7 +161,7 @@ NologEventEmitter.prototype._dataListener = function(data)
         }
       }
       //now loop through every jobs patternfunction
-      
+
       if(line)
       {
         for(var j = 0; j<self.jobs.length; j++)
@@ -178,7 +178,7 @@ NologEventEmitter.prototype._dataListener = function(data)
           {
             //d('enablenotevent '+ self.jobs[j].enablenotevent);
             if(self.jobs[j].enablenotevent)
-            { 
+            {
              // d('throw a notevent');
               var nomatch = self.jobs[j].notevent_patternfunction(line, self.jobs[j].pattern);
               //d(nomatch);
@@ -197,7 +197,7 @@ NologEventEmitter.prototype._dataListener = function(data)
     }
     return self;
   }
- 
+
 }
 //si - shoufIf
 NologEventEmitter.prototype.shoutIf = function(eventname, pattern, enablenotevent)
@@ -289,7 +289,7 @@ NologEventEmitter.prototype.killAll = function(allJobsAreDead)
     }
     self.jobs = [];
   }
-  
+
   if(self.spawn&&self.spawn.kill)
   {
     self.spawn.kill('SIGHUP');
@@ -301,7 +301,7 @@ NologEventEmitter.prototype.killAll = function(allJobsAreDead)
 NologEventEmitter.prototype.unwatch = NologEventEmitter.prototype.killAll;
 //create a brand new NologEventEmitter
 var createNologEventEmitter = function(input, params)
-{ 
+{
   d('createNologEventEmitter '+ input + ' ' + params);
   var nee = new NologEventEmitter;
   nee.input = input;
@@ -369,7 +369,7 @@ var createJob = function(readablestream, params)
   //helper function
     var assignfunctions = function(jobO, ifnot, patternfunction, notevent_patternfunction)
     {
-      if(!ifnot){ 
+      if(!ifnot){
         jobO.patternfunction = patternfunction;
         jobO.notevent_patternfunction = notevent_patternfunction;
       }
@@ -395,8 +395,8 @@ var createJob = function(readablestream, params)
     {
       d('pattern is regular expression');
       var patternfunction = function(line,pattern){ return line.match(pattern); };
-      
-      var notevent_patternfunction = function(line,pattern){ 
+
+      var notevent_patternfunction = function(line,pattern){
           var m = line.match(pattern);
           if(!m)
           {
@@ -411,7 +411,7 @@ var createJob = function(readablestream, params)
     {
       d('pattern is function');
       var patternfunction = function(line,pattern){ return pattern(line); }
-      var notevent_patternfunction = function(line,pattern){ 
+      var notevent_patternfunction = function(line,pattern){
           var m = pattern(line);
           if(!m)
           {
@@ -419,11 +419,11 @@ var createJob = function(readablestream, params)
           }
           return false;
         }
-      
-      
+
+
       newjob = assignfunctions(newjob, newjob.ifnot, patternfunction, notevent_patternfunction);
-      
-        
+
+
     }
   }
   else if (typeofpattern === 'boolean')
@@ -432,7 +432,7 @@ var createJob = function(readablestream, params)
     if(pattern === true)
     {
       d('pattern is true');
-     
+
       var patternfunction = function(line,pattern){ line.match(); }
       var notevent_patternfunction = function(line,pattern){ return false; }
       newjob = assignfunctions(newjob, newjob.ifnot, patternfunction, notevent_patternfunction);
@@ -459,11 +459,11 @@ var createJob = function(readablestream, params)
     newjob.finalize();
   }
   return newjob;
-  
+
 }
 
 //nolog is the a helper object for the module.exports
-var nolog = { 
+var nolog = {
   'watch': createNologEventEmitter
 }
 nolog.watch.w = nolog.watch;

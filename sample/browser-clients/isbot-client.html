@@ -2,7 +2,7 @@
   <head>
     <title>isBot Nolog Example</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.js"></script>
-        <script src="http://cdn.socket.io/stable/socket.io.js"></script> 
+        <script src="http://cdn.socket.io/stable/socket.io.js"></script>
         <script>
         "use strict";
 var d = 0;
@@ -15,7 +15,7 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
   var cW = c.width;
   var drawRandomDot = function(w,h,r,g,b)
   {
-    
+
     ctx.fillStyle = "rgb("+r+","+g+","+b+")";
     var x =Math.floor(Math.random()*cW);
     var y =Math.floor(Math.random()*cH);
@@ -23,7 +23,7 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
     console.log("x/y "+x+"/"+y);
     ctx.fillRect (x, y, w, h);
   }
-  
+
   var c = new io.Socket("127.0.0.1", {port:3002, transports:["websocket"]});
   c.on("connect", function() {
     c.send("start");
@@ -53,6 +53,6 @@ $("body").append('<canvas id="c" width="' + $(window).width() + '" height="' + $
            left:0;
            bottom:0;
            width:150px;
-           z-index:100;'>Legend: <span style="color:red;">Bot</span> <span style="color:blue;">!Bot</span></div> 
+           z-index:100;'>Legend: <span style="color:red;">Bot</span> <span style="color:blue;">!Bot</span></div>
   </body>
 </html>
